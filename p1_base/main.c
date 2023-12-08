@@ -216,8 +216,9 @@ void process_dir(char *dir_name)
         break;
       }
     }
-    else {
-            // Processo pai
+    else
+    {
+      // Processo pai
       current_processes++;
     }
   }
@@ -248,7 +249,7 @@ int main(int argc, char *argv[])
   dir_name = (char *)malloc(strlen(argv[1]) + 1);
   strcpy(dir_name, argv[1]);
   MAX_PROC = atoi(argv[2]);
-  if (argc > 3)
+  if (argc > 4)
   {
     char *endptr;
     unsigned long int delay = strtoul(argv[1], &endptr, 10);
