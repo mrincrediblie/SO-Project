@@ -1,22 +1,20 @@
 #include <limits.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
-
 #include <dirent.h>
-
 #include <stdio.h>
 #include <errno.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <string.h>
+#include <pthread.h>
 
 #include "constants.h"
 #include "operations.h"
 #include "parser.h"
 
+int MAX_PROC;
 void process_command(int file, char *buffer)
 {
 
@@ -188,9 +186,15 @@ void process_dir(char *dir_name)
     // return 1;
   }
   struct dirent *entry;
-
+  int current_processes = 0;
   while ((entry = readdir(jobs_dir)) != NULL)
   {
+    while (current_processes >= MAX_PROC)
+    {
+      // Aguarda enquanto o número máximo de processos em execução é atingido
+      wait(NULL);
+      current_processes--;
+    }
     printf("estou dentro de um processo\n");
     pid = fork();
     if (pid < 0)
@@ -211,6 +215,10 @@ void process_dir(char *dir_name)
         process_file(file_path, entry->d_name);
         break;
       }
+    }
+    else {
+            // Processo pai
+      current_processes++;
     }
   }
   if (pid > 0)
@@ -239,8 +247,8 @@ int main(int argc, char *argv[])
   char *dir_name = NULL;
   dir_name = (char *)malloc(strlen(argv[1]) + 1);
   strcpy(dir_name, argv[1]);
-
-  if (argc > 2)
+  MAX_PROC = atoi(argv[2]);
+  if (argc > 3)
   {
     char *endptr;
     unsigned long int delay = strtoul(argv[1], &endptr, 10);
