@@ -65,6 +65,7 @@ int ems_init(unsigned int delay_ms)
 
 int ems_terminate()
 {
+
   if (event_list == NULL)
   {
     fprintf(stderr, "EMS state must be initialized\n");
@@ -181,7 +182,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t *xs, size_t *ys)
 
 int ems_show(unsigned int event_id, char *buffer)
 {
-
+ 
   if (event_list == NULL)
   {
     fprintf(stderr, "EMS state must be initialized\n");
@@ -195,27 +196,32 @@ int ems_show(unsigned int event_id, char *buffer)
     fprintf(stderr, "Event not found\n");
     return 1;
   }
-
+  char *aux = (char *)malloc((event->rows * event->cols * 3) + event->rows + 1);
+  aux[0]='\0';
   for (size_t i = 1; i <= event->rows; i++)
   {
     for (size_t j = 1; j <= event->cols; j++)
     {
       unsigned int *seat = get_seat_with_delay(event, seat_index(event, i, j));
-      char seat_str[20]; // Tamanho apropriado para o seu caso
+      char seat_str[2]; // Tamanho apropriado para o seu caso
       sprintf(seat_str, "%u", *seat);
-      strcat(buffer, seat_str);
+      strcat(aux, seat_str);
       if (j < event->cols)
       {
-        strcat(buffer, " ");
+        strcat(aux, " ");
       }
     }
-    strcat(buffer, "\n");
+    strcat(aux, "\n");
+   
   }
+  strcat(buffer, aux);
   return 0;
 }
 
-int ems_list_events()
-{
+int ems_list_events(char* buffer)
+{ 
+  char *result = NULL;
+  size_t result_len = 0;
   if (event_list == NULL)
   {
     fprintf(stderr, "EMS state must be initialized\n");
@@ -223,19 +229,26 @@ int ems_list_events()
   }
 
   if (event_list->head == NULL)
-  {
-    printf("No events\n");
+  { 
+    strcat(buffer,"No events\n");
     return 0;
   }
 
   struct ListNode *current = event_list->head;
   while (current != NULL)
-  {
-    printf("Event: ");
-    printf("%u\n", (current->event)->id);
+  { result = realloc(result, result_len + strlen("Event: ")+ 20);
+    if (result == NULL)
+    {
+      fprintf(stderr, "Failed to allocate memory\n");
+      return 1;
+    }
+    sprintf(result + result_len, "Event: %u\n", (current->event)->id);
+    result_len = strlen(result);
     current = current->next;
+    
   }
-
+  strcat(buffer, result);
+  
   return 0;
 }
 
